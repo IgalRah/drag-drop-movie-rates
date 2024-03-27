@@ -1,4 +1,6 @@
-my-union/
-first-union/
-second-union/
+my_union/
+first_union/
+second_union/
 node_modules/
+.gitignore
+.tsconfig.json

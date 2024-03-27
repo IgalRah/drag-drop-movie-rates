@@ -104,5 +104,5 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "exclude": ["node_modules", "first-union", "second-union", "my-union"]
+  "exclude": ["node_modules", "first_union", "second_union", "my_union"]
 }
