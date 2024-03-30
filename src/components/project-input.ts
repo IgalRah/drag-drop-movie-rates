@@ -1,4 +1,7 @@
 /// <reference path="base-component.ts" />
+/// <reference path="../decorators/autobind.ts" />
+/// <reference path="../utility/validation.ts" />
+/// <reference path="../state/project-state.ts" />
 
 namespace App {
   export class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
@@ -40,7 +43,7 @@ namespace App {
       const descriptionValidatable: Validatable = {
         value: enteredDescription,
         required: true,
-        minLength: 5,
+        minLength: 4,
       };
       const peopleValidatable: Validatable = {
         value: +enteredPeople,
@@ -49,7 +52,7 @@ namespace App {
         max: 5,
       };
 
-      // Not a good validation
+      // Not a good validation:
       // if (
       //   enteredTitle.length === 0 ||
       //   enteredDescription.length === 0 ||

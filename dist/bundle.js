@@ -5,23 +5,71 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+// Component Base Class ==> Here we are eliminating code duplication
 var App;
 (function (App) {
-    let ProjectStatus;
-    (function (ProjectStatus) {
-        ProjectStatus[ProjectStatus["Active"] = 0] = "Active";
-        ProjectStatus[ProjectStatus["Finished"] = 1] = "Finished";
-    })(ProjectStatus = App.ProjectStatus || (App.ProjectStatus = {}));
-    class Project {
-        constructor(id, title, description, people, status) {
-            this.id = id;
-            this.title = title;
-            this.description = description;
-            this.people = people;
-            this.status = status;
+    class Component {
+        constructor(templateId, hostElementId, insertAtStart, newElementId) {
+            this.templateElement = document.getElementById(templateId);
+            this.hostElement = document.getElementById(hostElementId);
+            const importedNode = document.importNode(this.templateElement.content, true);
+            this.element = importedNode.firstElementChild;
+            if (newElementId) {
+                this.element.id = newElementId;
+            }
+            this.attach(insertAtStart);
+        }
+        attach(insertAtStart) {
+            this.hostElement.insertAdjacentElement(insertAtStart ? "afterbegin" : "beforeend", this.element);
         }
     }
-    App.Project = Project;
+    App.Component = Component;
+})(App || (App = {}));
+// AutoBind Decorator
+var App;
+(function (App) {
+    function AutoBind(_, _2, descriptor) {
+        const originalMethod = descriptor.value;
+        const abjDescriptor = {
+            configurable: true,
+            get() {
+                const boundFn = originalMethod.bind(this);
+                return boundFn;
+            },
+        };
+        return abjDescriptor;
+    }
+    App.AutoBind = AutoBind;
+})(App || (App = {}));
+// Validation Logic
+var App;
+(function (App) {
+    function validate(validatableInput) {
+        let isValid = true;
+        if (validatableInput.required) {
+            isValid = isValid && validatableInput.value.toString().length !== 0;
+        }
+        if (validatableInput.minLength != null &&
+            typeof validatableInput.value === "string") {
+            isValid =
+                isValid && validatableInput.value.length >= validatableInput.minLength;
+        }
+        if (validatableInput.maxLength != null &&
+            typeof validatableInput.value === "string") {
+            isValid =
+                isValid && validatableInput.value.length <= validatableInput.maxLength;
+        }
+        if (validatableInput.min != null &&
+            typeof validatableInput.value === "number") {
+            isValid = isValid && validatableInput.value >= validatableInput.min;
+        }
+        if (validatableInput.max != null &&
+            typeof validatableInput.value === "number") {
+            isValid = isValid && validatableInput.value <= validatableInput.max;
+        }
+        return isValid;
+    }
+    App.validate = validate;
 })(App || (App = {}));
 // Project State Management
 var App;
@@ -67,73 +115,10 @@ var App;
     App.ProjectState = ProjectState;
     App.projectState = ProjectState.getInstance();
 })(App || (App = {}));
-// Validation Logic
-var App;
-(function (App) {
-    function validate(validatableInput) {
-        let isValid = true;
-        if (validatableInput.required) {
-            isValid = isValid && validatableInput.value.toString().length !== 0;
-        }
-        if (validatableInput.minLength != null &&
-            typeof validatableInput.value === "string") {
-            isValid =
-                isValid && validatableInput.value.length >= validatableInput.minLength;
-        }
-        if (validatableInput.maxLength != null &&
-            typeof validatableInput.value === "string") {
-            isValid =
-                isValid && validatableInput.value.length <= validatableInput.maxLength;
-        }
-        if (validatableInput.min != null &&
-            typeof validatableInput.value === "number") {
-            isValid = isValid && validatableInput.value >= validatableInput.min;
-        }
-        if (validatableInput.max != null &&
-            typeof validatableInput.value === "number") {
-            isValid = isValid && validatableInput.value <= validatableInput.max;
-        }
-        return isValid;
-    }
-    App.validate = validate;
-})(App || (App = {}));
-// AutoBind Decorator
-var App;
-(function (App) {
-    function AutoBind(_, _2, descriptor) {
-        const originalMethod = descriptor.value;
-        const abjDescriptor = {
-            configurable: true,
-            get() {
-                const boundFn = originalMethod.bind(this);
-                return boundFn;
-            },
-        };
-        return abjDescriptor;
-    }
-    App.AutoBind = AutoBind;
-})(App || (App = {}));
-// Component Base Class ==> Here we are eliminating code duplication
-var App;
-(function (App) {
-    class Component {
-        constructor(templateId, hostElementId, insertAtStart, newElementId) {
-            this.templateElement = document.getElementById(templateId);
-            this.hostElement = document.getElementById(hostElementId);
-            const importedNode = document.importNode(this.templateElement.content, true);
-            this.element = importedNode.firstElementChild;
-            if (newElementId) {
-                this.element.id = newElementId;
-            }
-            this.attach(insertAtStart);
-        }
-        attach(insertAtStart) {
-            this.hostElement.insertAdjacentElement(insertAtStart ? "afterbegin" : "beforeend", this.element);
-        }
-    }
-    App.Component = Component;
-})(App || (App = {}));
 /// <reference path="base-component.ts" />
+/// <reference path="../decorators/autobind.ts" />
+/// <reference path="../utility/validation.ts" />
+/// <reference path="../state/project-state.ts" />
 var App;
 (function (App) {
     class ProjectInput extends App.Component {
@@ -159,7 +144,7 @@ var App;
             const descriptionValidatable = {
                 value: enteredDescription,
                 required: true,
-                minLength: 5,
+                minLength: 4,
             };
             const peopleValidatable = {
                 value: +enteredPeople,
@@ -167,7 +152,7 @@ var App;
                 min: 1,
                 max: 5,
             };
-            // Not a good validation
+            // Not a good validation:
             // if (
             //   enteredTitle.length === 0 ||
             //   enteredDescription.length === 0 ||
@@ -209,47 +194,29 @@ var App;
     ], ProjectInput.prototype, "submitHandler", null);
     App.ProjectInput = ProjectInput;
 })(App || (App = {}));
-/// <reference path="base-component.ts" />
 var App;
 (function (App) {
-    class ProjectItem extends App.Component {
-        get ratings() {
-            if (this.project.people === 1) {
-                return "1 Star Rating";
-            }
-            else {
-                return `${this.project.people} Stars Rating`;
-            }
-        }
-        constructor(hostId, project) {
-            super("single-project", hostId, false, project.id);
-            this.project = project;
-            this.configure();
-            this.renderContent();
-        }
-        dragStartHandler(event) {
-            event.dataTransfer.setData("text/plain", this.project.id);
-            event.dataTransfer.effectAllowed = "move";
-        }
-        dragEndHandler(_) {
-            console.log("Drag End");
-        }
-        configure() {
-            this.element.addEventListener("dragstart", this.dragStartHandler);
-            this.element.addEventListener("dragend", this.dragEndHandler);
-        }
-        renderContent() {
-            this.element.querySelector("h2").textContent = this.project.title;
-            this.element.querySelector("h3").textContent = this.ratings;
-            this.element.querySelector("p").textContent = this.project.description;
+    let ProjectStatus;
+    (function (ProjectStatus) {
+        ProjectStatus[ProjectStatus["Active"] = 0] = "Active";
+        ProjectStatus[ProjectStatus["Finished"] = 1] = "Finished";
+    })(ProjectStatus = App.ProjectStatus || (App.ProjectStatus = {}));
+    class Project {
+        constructor(id, title, description, people, status) {
+            this.id = id;
+            this.title = title;
+            this.description = description;
+            this.people = people;
+            this.status = status;
         }
     }
-    __decorate([
-        App.AutoBind
-    ], ProjectItem.prototype, "dragStartHandler", null);
-    App.ProjectItem = ProjectItem;
+    App.Project = Project;
 })(App || (App = {}));
 /// <reference path="base-component.ts" />
+/// <reference path="../decorators/autobind.ts" />
+/// <reference path="../state/project-state.ts" />
+/// <reference path="../models/project.ts" />
+/// <reference path="../models/drag-drop.ts" />
 var App;
 (function (App) {
     class ProjectList extends App.Component {
@@ -315,18 +282,54 @@ var App;
     ], ProjectList.prototype, "dragLeaveHandler", null);
     App.ProjectList = ProjectList;
 })(App || (App = {}));
-/// <reference path="models/drag-drop.ts" />
-/// <reference path="models/project.ts" />
-/// <reference path="state/project-state.ts" />
-/// <reference path="utility/validation.ts" />
-/// <reference path="decorators/autobind.ts" />
-/// <reference path="components/base-component.ts" />
 /// <reference path="components/project-input.ts" />
-/// <reference path="components/project-item.ts" />
 /// <reference path="components/project-list.ts" />
 var App;
 (function (App) {
     new App.ProjectInput();
     new App.ProjectList("active");
     new App.ProjectList("finished");
+})(App || (App = {}));
+/// <reference path="base-component.ts" />
+/// <reference path="../decorators/autobind.ts" />
+/// <reference path="../models/drag-drop.ts" />
+/// <reference path="../models/project.ts" />
+var App;
+(function (App) {
+    class ProjectItem extends App.Component {
+        get ratings() {
+            if (this.project.people === 1) {
+                return "1 Star Rating";
+            }
+            else {
+                return `${this.project.people} Stars Rating`;
+            }
+        }
+        constructor(hostId, project) {
+            super("single-project", hostId, false, project.id);
+            this.project = project;
+            this.configure();
+            this.renderContent();
+        }
+        dragStartHandler(event) {
+            event.dataTransfer.setData("text/plain", this.project.id);
+            event.dataTransfer.effectAllowed = "move";
+        }
+        dragEndHandler(_) {
+            console.log("Drag stopped");
+        }
+        configure() {
+            this.element.addEventListener("dragstart", this.dragStartHandler);
+            this.element.addEventListener("dragend", this.dragEndHandler);
+        }
+        renderContent() {
+            this.element.querySelector("h2").textContent = this.project.title;
+            this.element.querySelector("h3").textContent = this.ratings;
+            this.element.querySelector("p").textContent = this.project.description;
+        }
+    }
+    __decorate([
+        App.AutoBind
+    ], ProjectItem.prototype, "dragStartHandler", null);
+    App.ProjectItem = ProjectItem;
 })(App || (App = {}));
